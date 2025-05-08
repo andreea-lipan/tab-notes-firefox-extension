@@ -1,31 +1,55 @@
 html,
 body {
-  width: 300px;
+    width: 300px;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
 
+/* BUTTONS */
 button {
-  border: none;
-  width: 100%;
-  margin: 3% auto;
-  padding: 4px;
-  text-align: center;
-  font-size: 1.5em;
-  cursor: pointer;
-  background-color: #e5f2f2;
+    border: none;
+    width: 100%;
+    margin: 3% auto;
+    padding: 4px;
+    text-align: center;
+    font-size: 1.5em;
+    cursor: pointer;
+    background-color: #bde0fe;
+    border-radius: 5px;
 }
 
 button:hover {
-  background-color: #cff2f2;
+    background-color: #a2d2ff;
 }
 
-button[type="reset"] {
-  background-color: #fbfbc9;
+/* HEADER */
+.popup-header {
+    display: flex;
+    align-items: center; /* aligning vertically */
+    gap: 10px;
 }
 
-button[type="reset"]:hover {
-  background-color: #eaea9d;
+.popup-header p {
+    font-family: "Cal Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 23px;
+}
+
+/* OPTIONS */
+.popup-options table{
+    margin: 0 auto;
+}
+
+.option-text {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18px;
+}
+
+.popup-options th, td {
+    padding: 10px;
 }

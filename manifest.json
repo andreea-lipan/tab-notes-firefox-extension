@@ -7,7 +7,7 @@
 
   "permissions": ["tabs"],
 
-  "background": { 
+  "background": {
     "scripts": ["background.js"]
   },
 

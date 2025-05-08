@@ -1,21 +1,57 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="popup.css" />
-  </head>
+<head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="popup.css"/>
+    <link rel="stylesheet" href="slider.css"/>
 
-  <body>
+    <!----Font styles---->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
     <div id="popup-content">
-      <button type="create">Create Note</button>
-      <button type="delete">Delete Note on this Tab</button>
-      <button type="hide">Temporarily hide note on this tab</button>
-      <button type="unhide">Shows the previously hidden note on this tab</button>
+        <!----HEADER---->
+        <div class="popup-header">
+            <img src="icons-48.png" alt="Note Icon" width="48" height="48">
+            <p>Firefox Tab Notes</p>
+        </div>
+        <hr class="divider">
+
+        <!----OPTIONS---->
+        <div class="popup-options">
+            <table>
+                <tr>
+                    <td class="option-text">Create new note</td>
+                    <td><button type="create">+</button></td>
+                </tr>
+                <tr>
+                    <td class="option-text">Delete this note</td>
+                    <td><button type="delete">-</button></td>
+                </tr>
+                <tr>
+                    <td class="option-text">Hide note on this tab</td>
+                    <td>
+                        <div class="slider-container">
+                              <label class="switch">
+                                  <input type="checkbox" name="checkbox">
+                                  <span class="slider round"></span>
+                              </label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
+
+    <!----ERROR---->
     <div id="error-content" class="hidden">
-      <p>Can't add notes to this web page.</p>
-      <p>Try a different page.</p>
+        <p>Can't add notes to this web page.</p>
+        <p>Try a different page.</p>
     </div>
+
     <script src="popup.js"></script>
-  </body>
+</body>
 </html>

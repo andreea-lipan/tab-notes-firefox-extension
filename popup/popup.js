@@ -1,120 +1,64 @@
+// When opening the pop-up, set the slider to the correct value
+// And hide or show the note
+document.addEventListener('DOMContentLoaded', () => {
 
-// /**
-// * Listen for clicks on the buttons, and send the appropriate message to
-// * the content script in the page.
-// */
-// function listenForClicks() {
-//     document.addEventListener("click", (e) => {
-//     /**
-//     * Given the name of a beast, get the URL to the corresponding image.
-//     */
-//         function beastNameToURL(beastName) {
-//             switch (beastName) {
-//                 case "Frog":
-//                     return browser.runtime.getURL("beasts/frog.jpg");   
-//                 case "Snake":
-//                     return browser.runtime.getURL("beasts/snake.jpg");
-//                 case "Turtle":
-//                     return browser.runtime.getURL("beasts/turtle.jpg");
-//             }
-//         }
-
-//         /**
-//         * Insert the page-hiding CSS into the active tab,
-//         * then get the beast URL and
-//         * send a "beastify" message to the content script in the active tab.
-//         */
-//         function beastify(tabs) {
-//             browser.tabs.insertCSS({ code: hidePage }).then(() => {
-//                 const url = beastNameToURL(e.target.textContent);
-//                 browser.tabs.sendMessage(tabs[0].id, {
-//                     command: "beastify",
-//                     beastURL: url,
-//                 });
-//             });
-//         }
-
-//         /**
-//         * Remove the page-hiding CSS from the active tab,
-//         * send a "reset" message to the content script in the active tab.
-//         */
-//         function reset(tabs) {
-//             browser.tabs.removeCSS({ code: hidePage }).then(() => {
-//                 browser.tabs.sendMessage(tabs[0].id, {
-//                     command: "reset",
-//                 });
-//             });
-//         }
-
-//         /**
-//         * Just log the error to the console.
-//         */
-//         function reportError(error) {
-//             console.error(`Could not beastify: ${error}`);
-//         }
-
-//         /**
-//         * Get the active tab,
-//         * then call "beastify()" or "reset()" as appropriate.
-//         */
-//         if (e.target.tagName !== "BUTTON" || !e.target.closest("#popup-content")) {
-//             // Ignore when click is not on a button within <div id="popup-content">.
-//             return;
-//         }
-
-//         if (e.target.type === "create") {
-//             browser.tabs
-//             .query({ active: true, currentWindow: true })
-//             .then(reset)
-//             .catch(reportError);
-//         } else {
-//             browser.tabs
-//             .query({ active: true, currentWindow: true })
-//             .then(beastify)
-//             .catch(reportError);
-//         }
-//     });
-// }
-
-// /**
-// * There was an error executing the script.
-// * Display the popup's error message, and hide the normal UI.
-// */
-// function reportExecuteScriptError(error) {
-//     document.querySelector("#popup-content").classList.add("hidden");
-//     document.querySelector("#error-content").classList.remove("hidden");
-//     console.error(`Failed to execute beastify content script: ${error.message}`);
-// }
-
-// /**
-// * When the popup loads, inject a content script into the active tab,
-// * and add a click handler.
-// * If we couldn't inject the script, handle the error.
-// */
-// browser.tabs
-// .executeScript({ file: "/content_scripts/content.js" })
-// .then(listenForClicks)
-// .catch(reportExecuteScriptError);
-
-
-function sendToActiveTab(message) {
+    // Get the tab id
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, message);
+        // Get value of slider from localStorage
+        const label = "noteHidden" + tabs[0].id
+        let result = localStorage.getItem(label);
+
+        // Set the slider to the saved value
+        if (result === "true") {
+            checkbox.checked = true;
+        } else {
+            checkbox.checked = false;
+        }
+
+        // Hide or show the note
+        if (result === "true") {
+            sendToActiveTab({type: 'HIDE_NOTE'});
+        } else {
+            sendToActiveTab({type: 'UNHIDE_NOTE'});
+        }
     });
-  }
-  
-  document.querySelector('button[type="create"]').addEventListener('click', () => {
-    sendToActiveTab({ type: 'SHOW_NOTE' });
-  });
-  
-  document.querySelector('button[type="delete"]').addEventListener('click', () => {
-    sendToActiveTab({ type: 'DELETE_NOTE' });
-  });
-  
-  document.querySelector('button[type="hide"]').addEventListener('click', () => {
-    sendToActiveTab({ type: 'HIDE_NOTE' });
-  });
-  
-  document.querySelector('button[type="unhide"]').addEventListener('click', () => {
-    sendToActiveTab({ type: 'UNHIDE_NOTE' });
-  });
+});
+
+// function to send a message to the current tab
+function sendToActiveTab(message) {
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, message);
+    });
+}
+
+// When clicking on create, send message to content to show note
+document.querySelector('button[type="create"]').addEventListener('click', () => {
+    sendToActiveTab({type: 'SHOW_NOTE'});
+});
+
+// When clicking on delete, send message to content to delete note
+document.querySelector('button[type="delete"]').addEventListener('click', () => {
+    sendToActiveTab({type: 'DELETE_NOTE'});
+});
+
+// When changing value of slider, send message to content to hide or show the note
+let checkbox = document.querySelector("input[name=checkbox]");
+checkbox.addEventListener('change', () => {
+    const isChecked = checkbox.checked;
+
+    // this to get tab id
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tabID = tabs[0].id;
+        const label = "noteHidden" + tabID;
+
+        // Save the new state of the slider
+        localStorage.setItem(label, isChecked);
+
+        // Send message to content script
+        if (isChecked) {
+            sendToActiveTab({ type: 'HIDE_NOTE' });
+        } else {
+            sendToActiveTab({ type: 'UNHIDE_NOTE' });
+        }
+    });
+});

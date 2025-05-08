@@ -47,48 +47,9 @@ This will be the structure for this extension:
 │   └── popup.js
 └── style.css
 ```
-Let's take each file one by one
 
 ## manifest.json
 
-This is what the final file looks like:
-
-```
-{
-  "manifest_version": 2,
-
-  "name": "Tab Notes",
-  "version": "1.0",
-  "description": "Add a note tied to your current browser tab.",
-
-  "permissions": ["tabs"],
-
-  "background": { 
-    "scripts": ["background.js"]
-  },
-
-  "icons": {
-    "48": "icons/icons-48.png",
-    "96": "icons/icons-96.png"
-  },
-
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["style.css"]
-    }
-  ],
-
-  "browser_action": {
-    "default_icon": "icons/icons-48.png",
-    "default_title": "Tab Notes",
-    "default_popup": "popup/popup.html"
-  }
-}
-```
-
-Now lets break it down:
 ```
 "manifest_version": 2,
 "name": "Tab Notes",
@@ -99,7 +60,7 @@ Now lets break it down:
     "96": "icons/icons-96.png"
 }
 ```
-These contain metadata for the extension. Icons and description are optional but you should use them. They show up in the Add-ons Manager and make your extension looks more fancy.
+This contains metadata for the extension. Icons and description are optional but you should use them. They show up in the Add-ons Manager and make your extension looks more fancy.
 
 ```
 "content_scripts": [
@@ -137,4 +98,31 @@ Something like this:
 
 ## background.js
 
-to be continued...
+This script gets executed in the background. It acts kind of like a server. It saves the notes for the tabs locally in memory and returns them when asked.
+
+Using ```chrome.runtime.onMessage``` the components communicate with each other.
+And specifically using ```chrome.tabs.sendMessage``` we can communicate with the content script only.
+
+## content.js
+
+This is the content script. It can inject input into the webpage. In our case, the note.
+It communicates with the background to get and save notes and with the pop-up to creat, delete or hide notes.
+
+## popup.js
+
+This is the popup script. It handles the button clicks and tells the content what to do.
+The pop-up is the little options screen that appears when a user clicks on the extension in the extension bar.
+
+## This is how the scripts communicate
+
+![Diagram with scripts communication](/readme-images/diagram.png)
+
+## How to run the extension locally
+If you have the extension code, you can run inside your Firefox browser as follows:
+
+1. Type ```about:debugging#/runtime/this-firefox``` in a new browser tab. 
+This will open a settings page where you can see your extensions. Here you can add a temporary extension.
+2. Click on ```Load temporary Add-on``` and select your extensions manifest file.
+3. Now you should see your extension added, you can test by going to a different browser tab.
+
+Note: Extensions don't work in tabs opened with the ```developer.mozilla.org``` domain.
