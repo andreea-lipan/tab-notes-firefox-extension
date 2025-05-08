@@ -5,6 +5,16 @@ This is a project for \[FD] - Framework Development
 ---
 
 # How to make a tab notes extension for Firefox
+This is a mini tutorial on how to make a Firefox extension which allows a user to save a sticky note on a browser tab. 
+The note is connected to the tab, so regardless of what websites you visit, if the browser tab remains the same, so does the note.
+
+### Example
+
+![Usage example](/readme-images/usage.gif)
+
+---
+
+## Background
 
 I am one of those people that has like 50 tabs opened in their browser and I swear they all have a purpose, or at least they did at the time I opened them. The problem is more often than not I forget why I opened certain tabs, and then I don't want to close them because what if I need them? I opened them for a reason right? And so I needed a way to remember why I opened a certain tab and what information I was searching there.
 
@@ -100,18 +110,170 @@ Something like this:
 
 This script gets executed in the background. It acts kind of like a server. It saves the notes for the tabs locally in memory and returns them when asked.
 
+```
+const tabNotes = {};
+```
+
+It listens for any messages that might come In our case they would come from the content script, for saving or retrieving the note.
+
+```
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    const tabId = sender.tab.id;
+
+    if (msg.type === 'SAVE_NOTE') {
+        tabNotes[tabId] = msg.content;
+    } else if (msg.type === 'GET_NOTE') {
+        sendResponse({content: tabNotes[tabId] || ''});
+    }
+});
+```
+
 Using ```chrome.runtime.onMessage``` the components communicate with each other.
 And specifically using ```chrome.tabs.sendMessage``` we can communicate with the content script only.
+
+This tells the content script to show the note when the browser tab changes.
+```
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tabNotes[tabId]) {
+        chrome.tabs.sendMessage(tabId, {type: 'SHOW_NOTE'});
+    }
+});
+```
+
+And when a tab gets closed, the note gets removed.
+``` 
+chrome.tabs.onRemoved.addListener((tabId) => {
+    delete tabNotes[tabId];
+});
+```
 
 ## content.js
 
 This is the content script. It can inject input into the webpage. In our case, the note.
 It communicates with the background to get and save notes and with the pop-up to creat, delete or hide notes.
 
+Based on what the messaged received from either the background or the pop-up says, the script
+will show, hide or delete the note.
+``` 
+chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'SHOW_NOTE') {
+        showNote();
+    } else if (msg.type === 'HIDE_NOTE') {
+        const note = document.getElementById('tab-note-wrapper');
+        if (note) note.style.display = 'none';
+    } else if (msg.type === 'UNHIDE_NOTE') {
+        const note = document.getElementById('tab-note-wrapper');
+        if (note) note.style.display = 'block';
+    } else if (msg.type === 'DELETE_NOTE') {
+        const note = document.getElementById('tab-note-wrapper');
+        if (note) note.remove();
+        chrome.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
+    }
+});
+```
+
+When we create the note, if it already exists in the background list then we show it. And as the user
+types in the note it gets send to background for saving.
+
+```
+function showNote() {
+    
+    // ... code to create the note
+
+    // Show note logic
+    // Fetch note from background
+    chrome.runtime.sendMessage({type: 'GET_NOTE'}, (response) => {
+        noteBox.value = response.content || '';
+    });
+
+    // Save note with every input
+    noteBox.addEventListener('input', () => {
+        chrome.runtime.sendMessage({
+            type: 'SAVE_NOTE',
+            content: noteBox.value
+        });
+    });
+}
+```
+
 ## popup.js
 
 This is the popup script. It handles the button clicks and tells the content what to do.
 The pop-up is the little options screen that appears when a user clicks on the extension in the extension bar.
+
+When the page opens, either hide or show the note based on the values previously saved in local storage. And se the value of the 'hide slider.
+```
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Get the tab id
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        // Get value of slider from localStorage
+        const label = "noteHidden" + tabs[0].id
+        let result = localStorage.getItem(label);
+
+        // Set the slider to the saved value
+        if (result === "true") {
+            checkbox.checked = true;
+        } else {
+            checkbox.checked = false;
+        }
+
+        // Hide or show the note
+        if (result === "true") {
+            sendToActiveTab({type: 'HIDE_NOTE'});
+        } else {
+            sendToActiveTab({type: 'UNHIDE_NOTE'});
+        }
+    });
+});
+```
+
+Create a utility function to send a message to the current tab.
+
+```
+function sendToActiveTab(message) {
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, message);
+    });
+}
+```
+
+Add the buttons onclick handlers, which send messsages to the content script.
+
+```
+// When clicking on create, send message to content to show note
+document.querySelector('button[type="create"]').addEventListener('click', () => {
+    sendToActiveTab({type: 'SHOW_NOTE'});
+});
+
+// When clicking on delete, send message to content to delete note
+document.querySelector('button[type="delete"]').addEventListener('click', () => {
+    sendToActiveTab({type: 'DELETE_NOTE'});
+});
+```
+```
+// When changing value of slider, send message to content to hide or show the note
+let checkbox = document.querySelector("input[name=checkbox]");
+checkbox.addEventListener('change', () => {
+    const isChecked = checkbox.checked;
+
+    // this to get tab id
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tabID = tabs[0].id;
+        const label = "noteHidden" + tabID;
+
+        // Save the new state of the slider
+        localStorage.setItem(label, isChecked);
+
+        // Send message to content script
+        if (isChecked) {
+            sendToActiveTab({ type: 'HIDE_NOTE' });
+        } else {
+            sendToActiveTab({ type: 'UNHIDE_NOTE' });
+        }
+    });
+});
+```
 
 ## This is how the scripts communicate
 
