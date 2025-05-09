@@ -201,7 +201,8 @@ function showNote() {
 This is the popup script. It handles the button clicks and tells the content what to do.
 The pop-up is the little options screen that appears when a user clicks on the extension in the extension bar.
 
-When the page opens, either hide or show the note based on the values previously saved in local storage. And se the value of the 'hide slider.
+When the page opens, either hide or show the note based on the values 
+previously saved in local storage, and set the value of the "hide slider".
 ```
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -240,20 +241,24 @@ function sendToActiveTab(message) {
 
 Add the buttons onclick handlers, which send messsages to the content script.
 
+Show note when clicking on ```create new note```
 ```
-// When clicking on create, send message to content to show note
 document.querySelector('button[type="create"]').addEventListener('click', () => {
     sendToActiveTab({type: 'SHOW_NOTE'});
 });
+```
 
-// When clicking on delete, send message to content to delete note
+Delete current note when clicking on ```delete note```
+```
 document.querySelector('button[type="delete"]').addEventListener('click', () => {
     sendToActiveTab({type: 'DELETE_NOTE'});
 });
 ```
+
+Hide or unhide depending on the value of the slider
 ```
-// When changing value of slider, send message to content to hide or show the note
 let checkbox = document.querySelector("input[name=checkbox]");
+
 checkbox.addEventListener('change', () => {
     const isChecked = checkbox.checked;
 
