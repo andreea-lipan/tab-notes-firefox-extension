@@ -14,6 +14,11 @@ The note is connected to the tab, so regardless of what websites you visit, if t
 
 ---
 
+## Table of contents
+
+1. [Background](#Background)
+2. [Popup.js](#popup.js)
+
 ## Background
 
 I am one of those people that has like 50 tabs opened in their browser and I swear they all have a purpose, or at least they did at the time I opened them. The problem is more often than not I forget why I opened certain tabs, and then I don't want to close them because what if I need them? I opened them for a reason right? And so I needed a way to remember why I opened a certain tab and what information I was searching there.
