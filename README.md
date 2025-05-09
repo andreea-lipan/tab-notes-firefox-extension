@@ -35,7 +35,7 @@ This is the official documentation I have used in writing my code. I strogly rec
 
 ---
 
-## So how does one build a browser extension?
+# So how does one build a browser extension?
 
 We need to create some files:
 1. A folder for your extension files.
@@ -63,7 +63,7 @@ This will be the structure for this extension:
 └── style.css
 ```
 
-## manifest.json
+# manifest.json
 
 ```
 "manifest_version": 2,
@@ -111,7 +111,7 @@ Something like this:
 
 ![Popup example](/readme-images/popup.png)
 
-## background.js
+# background.js
 
 This script gets executed in the background. It acts kind of like a server. It saves the notes for the tabs locally in memory and returns them when asked.
 
@@ -152,7 +152,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 });
 ```
 
-## content.js
+# content.js
 
 This is the content script. It can inject input into the webpage. In our case, the note.
 It communicates with the background to get and save notes and with the pop-up to creat, delete or hide notes.
@@ -201,13 +201,20 @@ function showNote() {
 }
 ```
 
-## popup.js
+# popup.js
 
 This is the popup script. It handles the button clicks and tells the content what to do.
 The pop-up is the little options screen that appears when a user clicks on the extension in the extension bar.
 
+![Gif showing how to open the popup](/readme-images/popup.gif)
+
 When the page opens, either hide or show the note based on the values 
 previously saved in local storage, and set the value of the "hide slider".
+
+```chrome.tabs.query``` is an async call, therefore all code that depends on the result must be 
+executed at the same time. Because all the code depends on the call result (the tab id), the async call
+wraps around it.
+
 ```
 document.addEventListener('DOMContentLoaded', () => {
 
