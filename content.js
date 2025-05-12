@@ -1,11 +1,11 @@
 // Listening for messages from popup or background
-chrome.runtime.onMessage.addListener((msg) => {
+browser.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'SHOW_NOTE') {
         showNote();
     } else if (msg.type === 'HIDE_NOTE') {
         hideNote();
     } else if (msg.type === 'UNHIDE_NOTE') {
-        showNote();
+        unhideNote();
     } else if (msg.type === 'DELETE_NOTE') {
         deleteNote();
     }
@@ -18,34 +18,42 @@ function hideNote() {
     }
 }
 
+function unhideNote() {
+    const note = document.getElementById('tab-note-wrapper');
+    if (note) {
+        note.style.display = 'block';
+    }
+}
+
 function deleteNote() {
     const note = document.getElementById('tab-note-wrapper');
     if (note) {
         note.remove();
     }
-    chrome.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
+    browser.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
 }
 
 function showNote() {
     // Create UI for note if it doesn't exist, else unhide it
-    createNote();
+    let noteBox = document.createElement('textarea');
+    createNote(noteBox);
 
     // Show note logic
     // Fetch note from background
-    chrome.runtime.sendMessage({type: 'GET_NOTE'}, (response) => {
+    browser.runtime.sendMessage({type: 'GET_NOTE'}, (response) => {
         noteBox.value = response.content || '';
     });
 
     // Save note with every input
     noteBox.addEventListener('input', () => {
-        chrome.runtime.sendMessage({
+        browser.runtime.sendMessage({
             type: 'SAVE_NOTE',
             content: noteBox.value
         });
     });
 }
 
-function createNote() {
+function createNote(noteBox) {
     const existing = document.getElementById('tab-note-wrapper');
     if (existing) {
         existing.style.display = 'block';
@@ -53,8 +61,9 @@ function createNote() {
     }
 
     // Create note UI
-    var wrapper, dragBar;
-    createNoteUI(wrapper, dragBar);
+    let wrapper = document.createElement('div');
+    let dragBar = document.createElement('div');
+    createNoteUI(wrapper, dragBar, noteBox);
 
     // Add drag logic
     dragLogic(dragBar, wrapper);
@@ -63,17 +72,14 @@ function createNote() {
     document.body.appendChild(wrapper);
 }
 
-function createNoteUI(wrapper, dragBar) {
+function createNoteUI(wrapper, dragBar, noteBox) {
     // Wrapper for dragbar and note
-    wrapper = document.createElement('div');
     wrapper.id = 'tab-note-wrapper';
 
     // Drag bar
-    dragBar = document.createElement('div');
     dragBar.id = 'tab-note-dragbar';
 
     // Note text area
-    noteBox = document.createElement('textarea');
     noteBox.id = 'tab-note';
     noteBox.placeholder = 'Type your note here...';
 

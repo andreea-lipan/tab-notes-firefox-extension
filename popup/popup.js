@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // Get the tab id
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         // Get value of slider from localStorage
         const label = "noteHidden" + tabs[0].id
         let result = localStorage.getItem(label);
@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // function to send a message to the current tab
 function sendToActiveTab(message) {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, message);
+    browser.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        browser.tabs.sendMessage(tabs[0].id, message);
     });
 }
 
@@ -47,7 +47,7 @@ checkbox.addEventListener('change', () => {
     const isChecked = checkbox.checked;
 
     // this to get tab id
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tabID = tabs[0].id;
         const label = "noteHidden" + tabID;
 
