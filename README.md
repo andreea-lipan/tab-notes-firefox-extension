@@ -343,6 +343,4 @@ This will open a settings page where you can see your extensions. Here you can a
 
 Note: Extensions don't work in tabs opened with the ```developer.mozilla.org``` domain.
 
-To submit the extension:
-
-[Here](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/)
+To submit the extension to mozzila: [extensionworkshop.com](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/)
