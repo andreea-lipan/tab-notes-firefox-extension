@@ -16,8 +16,12 @@ The note is connected to the tab, so regardless of what websites you visit, if t
 
 ## Table of contents
 
-1. [Background](#Background)
-2. [Popup.js](#popup.js)
+1. [Manifest](#manifestjson)
+2. [Background.js](#backgroundjs)
+3. [Content.js](#contentjs)
+4. [Popup.js](#popupjs)
+5. [How scripts communicate](#this-is-how-the-scripts-communicate)
+6. [How to run the extension](#how-to-run-the-extension-locally)
 
 ## Background
 
@@ -37,33 +41,39 @@ This is the official documentation I have used in writing my code. I strogly rec
 
 # So how does one build a browser extension?
 
-We need to create some files:
+We just need to create some files. At core, you only need these files (out of which
+technically only the manifest is mandatory):
+
 1. A folder for your extension files.
 2. A manifest.json for the extensions settings.
 3. A background.js which will always execute in the background of your browser.
 4. A content.js which will inject code into the webpage.
 5. A popup to see the extension options in the browser.
-6. Add icons.
+6. Icons.
 
-This will be the structure for this extension:
+This will be the exact structure for this extension:
 
 ```
 .
 ├── README.md
+├── manifest.json
 ├── background.js
 ├── content.js
-├── icons
-│   ├── icons-48.png
-│   └── icons-96.png
-├── manifest.json
+├── style.css
 ├── popup
 │   ├── popup.css
 │   ├── popup.html
-│   └── popup.js
-└── style.css
+│   ├── popup.js
+│   ├── slider.css
+│   └── icons-48.png
+└── icons
+    ├── icons-48.png
+    └── icons-96.png
 ```
 
 # manifest.json
+
+This contains metadata for the extension. Icons and description are optional but you should use them. They show up in the Add-ons Manager and make your extension looks more fancy.
 
 ```
 "manifest_version": 2,
@@ -75,7 +85,10 @@ This will be the structure for this extension:
     "96": "icons/icons-96.png"
 }
 ```
-This contains metadata for the extension. Icons and description are optional but you should use them. They show up in the Add-ons Manager and make your extension looks more fancy.
+
+This will tell the browser to load the ```content.js``` script into the Web pages that match ```[all_urls]```, which in this case means all pages.
+
+Important note: Not all sites will allow for script injection. For example no extensions will work on pages from mozzila.org.
 
 ```
 "content_scripts": [
@@ -86,17 +99,22 @@ This contains metadata for the extension. Icons and description are optional but
     }
 ]
 ```
-This will tell the browser to load the ```content.js``` script into the Web pages that match ```[all_urls]```, which in this case means all pages.
 
-Important note: Not all sites will allow for script injection. For example no extensions will work on pages from mozzila.org.
-
+This will tell the browser to execute the background.js script in the background. 
+Meaning while the extension is running, this scripts will continuously 
+be executed. This is a manifest V2 specific behaviour. In the newer 
+Manifest V3 this is not the case. Background scripts will still be 
+executed in the background but once they become idle, the execution stops. 
+Therefore, saving data in memory will not work there.
 
 ```
 "background": { 
     "scripts": ["background.js"]
 },
 ```
-This will tell the browser to execute the background.js script in the background. Meaning while the extension is running, this scripts will contiuosly be executed. This is a manifest V2 specific behaviour. In the newer Manifest V3 this is not the case. Background scripts will still be executed in the background but once they become idle, the execution stops. Therefore, saving data in memory will not work there.
+
+This is how we can create options for our extension. When clicking the extension 
+from the browser extension section, the ```popup.html``` file will be loaded.
 
 ```
 "browser_action": {
@@ -105,7 +123,6 @@ This will tell the browser to execute the background.js script in the background
     "default_popup": "popup/popup.html"
 }
 ```
-This is how we can create options for our extension. When clicking the extension from the browser extension section, the ```popup.html``` file will be loaded.
 
 Something like this:
 
@@ -164,17 +181,34 @@ chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'SHOW_NOTE') {
         showNote();
     } else if (msg.type === 'HIDE_NOTE') {
-        const note = document.getElementById('tab-note-wrapper');
-        if (note) note.style.display = 'none';
+        hideNote();
     } else if (msg.type === 'UNHIDE_NOTE') {
-        const note = document.getElementById('tab-note-wrapper');
-        if (note) note.style.display = 'block';
+        showNote();
     } else if (msg.type === 'DELETE_NOTE') {
-        const note = document.getElementById('tab-note-wrapper');
-        if (note) note.remove();
-        chrome.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
+        deleteNote();
     }
 });
+```
+
+Functions for showing, hiding or deleting a note.
+
+``` 
+function hideNote() {
+    const note = document.getElementById('tab-note-wrapper');
+    if (note) { 
+        note.style.display = 'none';
+    }
+}
+```
+
+```
+function deleteNote() {
+    const note = document.getElementById('tab-note-wrapper');
+    if (note) {
+        note.remove();
+    }
+    chrome.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
+}
 ```
 
 When we create the note, if it already exists in the background list then we show it. And as the user
@@ -182,8 +216,8 @@ types in the note it gets send to background for saving.
 
 ```
 function showNote() {
-    
-    // ... code to create the note
+    // Create UI for note if it doesn't exist, else unhide it
+    createNote();
 
     // Show note logic
     // Fetch note from background
@@ -200,6 +234,9 @@ function showNote() {
     });
 }
 ```
+
+As for the note UI, I created it using JS code. You can see the details inside the file.
+
 
 # popup.js
 
@@ -305,3 +342,7 @@ This will open a settings page where you can see your extensions. Here you can a
 3. Now you should see your extension added, you can test by going to a different browser tab.
 
 Note: Extensions don't work in tabs opened with the ```developer.mozilla.org``` domain.
+
+To submit the extension:
+
+[Here](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/)
