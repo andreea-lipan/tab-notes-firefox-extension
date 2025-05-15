@@ -1,5 +1,3 @@
-This project is not finished
-
 This is a project for \[FD] - Framework Development
 
 ---
@@ -139,7 +137,7 @@ const tabNotes = {};
 It listens for any messages that might come In our case they would come from the content script, for saving or retrieving the note.
 
 ```
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const tabId = sender.tab.id;
 
     if (msg.type === 'SAVE_NOTE') {
@@ -150,21 +148,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 ```
 
-Using ```chrome.runtime.onMessage``` the components communicate with each other.
-And specifically using ```chrome.tabs.sendMessage``` we can communicate with the content script only.
+Using ```browser.runtime.onMessage``` the components communicate with each other.
+And specifically using ```browser.tabs.sendMessage``` we can communicate with the content script only.
 
 This tells the content script to show the note when the browser tab changes.
 ```
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tabNotes[tabId]) {
-        chrome.tabs.sendMessage(tabId, {type: 'SHOW_NOTE'});
+        browser.tabs.sendMessage(tabId, {type: 'SHOW_NOTE'});
     }
 });
 ```
 
 And when a tab gets closed, the note gets removed.
 ``` 
-chrome.tabs.onRemoved.addListener((tabId) => {
+browser.tabs.onRemoved.addListener((tabId) => {
     delete tabNotes[tabId];
 });
 ```
@@ -177,7 +175,7 @@ It communicates with the background to get and save notes and with the pop-up to
 Based on what the messaged received from either the background or the pop-up says, the script
 will show, hide or delete the note.
 ``` 
-chrome.runtime.onMessage.addListener((msg) => {
+browser.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'SHOW_NOTE') {
         showNote();
     } else if (msg.type === 'HIDE_NOTE') {
@@ -207,7 +205,7 @@ function deleteNote() {
     if (note) {
         note.remove();
     }
-    chrome.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
+    browser.runtime.sendMessage({type: 'SAVE_NOTE', content: ''});
 }
 ```
 
@@ -221,13 +219,13 @@ function showNote() {
 
     // Show note logic
     // Fetch note from background
-    chrome.runtime.sendMessage({type: 'GET_NOTE'}, (response) => {
+    browser.runtime.sendMessage({type: 'GET_NOTE'}, (response) => {
         noteBox.value = response.content || '';
     });
 
     // Save note with every input
     noteBox.addEventListener('input', () => {
-        chrome.runtime.sendMessage({
+        browser.runtime.sendMessage({
             type: 'SAVE_NOTE',
             content: noteBox.value
         });
@@ -248,7 +246,7 @@ The pop-up is the little options screen that appears when a user clicks on the e
 When the page opens, either hide or show the note based on the values 
 previously saved in local storage, and set the value of the "hide slider".
 
-```chrome.tabs.query``` is an async call, therefore all code that depends on the result must be 
+```browser.tabs.query``` is an async call, therefore all code that depends on the result must be 
 executed at the same time. Because all the code depends on the call result (the tab id), the async call
 wraps around it.
 
@@ -256,7 +254,7 @@ wraps around it.
 document.addEventListener('DOMContentLoaded', () => {
 
     // Get the tab id
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         // Get value of slider from localStorage
         const label = "noteHidden" + tabs[0].id
         let result = localStorage.getItem(label);
@@ -282,8 +280,8 @@ Create a utility function to send a message to the current tab.
 
 ```
 function sendToActiveTab(message) {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, message);
+    browser.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        browser.tabs.sendMessage(tabs[0].id, message);
     });
 }
 ```
@@ -312,7 +310,7 @@ checkbox.addEventListener('change', () => {
     const isChecked = checkbox.checked;
 
     // this to get tab id
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tabID = tabs[0].id;
         const label = "noteHidden" + tabID;
 
